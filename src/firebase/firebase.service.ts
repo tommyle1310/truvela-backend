@@ -9,7 +9,7 @@ export class FirebaseService {
 
     constructor() {
         admin.initializeApp({
-            credential: admin.credential.cert(require("E:/bad self-made projects/Truvela/backend/db-firebase.json")),
+            credential: admin.credential.cert(require(process.env.FIREBASE_SERVICE_ACCOUNT_PATH)),
         });
         this.firestore = admin.firestore();
     }
@@ -64,13 +64,17 @@ export class FirebaseService {
     }
 
     // Increment the user ID counter
-    async incrementUserIdCounter() {
-        const counterRef = this.firestore.collection('counters').doc('userIdCounter');
+    async incrementCounter(counterName: string) {
+        const counterRef = this.firestore.collection('counters').doc(counterName);
+
+        // Increment the counter
         await counterRef.update({
             counter: admin.firestore.FieldValue.increment(1),
         });
 
+        // Fetch the updated counter value
         const updatedCounterDoc = await counterRef.get();
-        return updatedCounterDoc.data().counter;
+        return updatedCounterDoc.data()?.counter;
     }
+
 }
