@@ -1,14 +1,30 @@
 
-
-
-
-export enum Gender {
-    MALE = 'MALE',
-    FEMALE = 'FEMALE',
-    OTHER = 'OTHER',
+export enum Enum_Level {
+    INTERN = "Intern",
+    JUNIOR = "Junior",
+    INTERMEDIATE = "Intermediate",
+    SENIOR = "Senior",
+    LEAD = "Lead",
+    ELITE = "Elite",
+    DIRECTOR = "Director",
+    VP = "Vice President",
+    C_LEVEL = "C-Level"
 }
 
-export enum Role {
+export enum Enum_Job_Type {
+    FULL_TIME = 'Full-time',
+    PARTTIME = 'Part-time',
+    CONTRACT = 'Contract',
+}
+
+
+export enum Enum_Gender {
+    MALE = 'Male',
+    FEMALE = 'Female',
+    OTHER = 'Other',
+}
+
+export enum Enum_Role {
     CUSTOMER = 'CUSTOMER',
     STAFF = 'STAFF',
 }

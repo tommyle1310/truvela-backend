@@ -1,7 +1,7 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateCustomerDto } from './create-customer.dto';
 import { IsString, IsEmail, IsOptional, IsEnum, IsArray, IsBoolean, IsObject } from 'class-validator';
-import { Gender } from 'src/utils/enums';
+import { Enum_Gender } from 'src/utils/enums';
 
 export class UpdateCustomerDto extends PartialType(CreateCustomerDto) {
     @IsOptional()
@@ -29,8 +29,8 @@ export class UpdateCustomerDto extends PartialType(CreateCustomerDto) {
     date_of_birth?: string; // Can be a timestamp or ISO date string
 
     @IsOptional()
-    @IsEnum(Gender)
-    gender?: Gender;
+    @IsEnum(Enum_Gender)
+    gender?: Enum_Gender;
 
     @IsOptional()
     @IsArray()

@@ -1,5 +1,5 @@
 import { IsString, IsEmail, IsOptional, IsEnum, IsArray, IsBoolean, IsObject } from 'class-validator';
-import { Gender } from 'src/utils/enums';
+import { Enum_Gender } from 'src/utils/enums';
 
 export class CreateCustomerDto {
     @IsString()
@@ -22,8 +22,8 @@ export class CreateCustomerDto {
     date_of_birth: string; // Can be a timestamp or ISO date string
 
     @IsOptional()
-    @IsEnum(Gender)
-    gender: Gender;
+    @IsEnum(Enum_Gender)
+    gender: Enum_Gender;
 
     @IsOptional()
     @IsArray()
