@@ -1,4 +1,3 @@
-// firebase.service.ts
 import { Injectable } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 import { Firestore } from '@google-cloud/firestore';
@@ -14,60 +13,123 @@ export class FirebaseService {
         this.firestore = admin.firestore();
     }
 
-    async createDocument(collection: string, docId: string, data: any) {
-        await this.firestore.collection(collection).doc(docId).set(data);
-    }
-
-    // Get all documents from a collection
-    async getCollection(collectionName: string) {
+    async getCollection(collectionName: string): Promise<FirebaseFirestore.DocumentData[]> {
         const snapshot = await this.firestore.collection(collectionName).get();
         return snapshot.docs.map(doc => {
             const data = doc.data();
-            return { id: doc.id, ...data };  // Spread the document data into the object
+            return { id: doc.id, ...data };  // Attach the document ID to the data
         });
     }
 
 
-    // Get a document by ID from a collection
+    // Add a method to query Firestore collections
+    async queryCollection(collectionName: string, field?: string, value?: string): Promise<FirebaseFirestore.DocumentData[]> {
+        // Start with the collection reference
+        let query: FirebaseFirestore.Query = this.firestore.collection(collectionName);
+
+        // If field and value are provided, apply the query filter
+        if (field && value) {
+            console.log(`Querying collection '${collectionName}' where ${field} == ${value}`);
+            query = query.where(field, '==', value); // Apply the 'where' filter
+        }
+
+        // Execute the query and get the snapshot of matching documents
+        const snapshot = await query.get();
+
+        // If no documents are found, log it
+        if (snapshot.empty) {
+            console.log(`No documents found for query ${field} == ${value}`);
+            return [];
+        }
+
+        // Log the retrieved documents for debugging
+        console.log(`Found ${snapshot.size} document(s)`);
+
+        // Return the documents' data as an array of objects
+        return snapshot.docs.map(doc => {
+            console.log('Document data:', doc.data());
+            return doc.data();
+        });
+    }
+
+
+
+
+    /**
+     * General function to perform Firestore operations (Create/Read/Update/Delete)
+     * @param collectionName The collection name in Firestore
+     * @param docId The document ID
+     * @param data The data to set/update (optional for read/delete)
+     * @param operation The operation to perform ('create', 'update', 'get', 'delete')
+     */
+    async performFirestoreOperation(collection: string, docId: string, data: any, operation: string) {
+        try {
+            switch (operation) {
+                case 'create':
+                    return await this.firestore.collection(collection).doc(docId).set(data);  // This might be where the error is happening
+                case 'update':
+                    return await this.firestore.collection(collection).doc(docId).update(data);
+                case 'get':
+                    return await this.firestore.collection(collection).doc(docId).get();
+                case 'delete':
+                    return await this.firestore.collection(collection).doc(docId).delete();
+                default:
+                    throw new Error('Invalid operation');
+            }
+        } catch (error) {
+            throw new Error(`Firestore operation failed: ${error.message}`);
+        }
+    }
+
+
+
+    // Wrapper function for create operation
+    async createDocument(collection: string, docId: string, data: any) {
+        await this.firestore.collection(collection).doc(docId).set(data);
+    }
+
+    // Wrapper function for update operation
+    async updateDocument(collectionName: string, docId: string, data: any) {
+        await this.performFirestoreOperation(collectionName, docId, data, 'update');
+    }
+
+    // Wrapper function for get operation
     async getDocument(collectionName: string, documentId: string) {
         const doc = await this.firestore.collection(collectionName).doc(documentId).get();
+
+        // If the document doesn't exist, return null
         if (!doc.exists) {
             return null;
         }
-        return { id: doc.id, ...doc.data() };
+
+        // Return only the document data
+        return doc.data();
     }
 
-    // Add a document to a collection
-    async addDocument(collectionName: string, documentId: string, data: any) {
-        await this.firestore.collection(collectionName).doc(documentId).set(data);
+
+    // Wrapper function for delete operation
+    async deleteDocument(collectionName: string, docId: string) {
+        await this.performFirestoreOperation(collectionName, docId, undefined, 'delete');
     }
 
-    // Update a document in a collection
-    async updateDocument(collectionName: string, documentId: string, data: any) {
-        await this.firestore.collection(collectionName).doc(documentId).update(data);
-    }
-
-    // Delete a document from a collection
-    async deleteDocument(collectionName: string, documentId: string) {
-        await this.firestore.collection(collectionName).doc(documentId).delete();
-    }
-
-    // Get the current user ID counter
-    async getUserIdCounter() {
-        const counterDoc = await this.firestore.collection('counters').doc('userIdCounter').get();
-        if (!counterDoc.exists) {
-            // If the counter document doesn't exist, create it with an initial value of 0
-            await this.firestore.collection('counters').doc('userIdCounter').set({ counter: 0 });
-            return 0;
-        }
-        return counterDoc.data().counter;
-    }
-
-    // Increment the user ID counter
+    /**
+     * Increment a specific counter in Firestore
+     * @param counterName The counter document name (e.g., 'userIdCounter')
+     */
+    // Increment the counter value or create it if not exists
     async incrementCounter(counterName: string) {
         const counterRef = this.firestore.collection('counters').doc(counterName);
 
-        // Increment the counter
+        // Check if the counter document exists
+        const counterDoc = await counterRef.get();
+
+        if (!counterDoc.exists) {
+            // If the counter document doesn't exist, create it with an initial value of 1
+            await counterRef.set({ counter: 1 });
+            return 1;
+        }
+
+        // If the counter exists, increment it atomically
         await counterRef.update({
             counter: admin.firestore.FieldValue.increment(1),
         });
@@ -76,5 +138,4 @@ export class FirebaseService {
         const updatedCounterDoc = await counterRef.get();
         return updatedCounterDoc.data()?.counter;
     }
-
 }

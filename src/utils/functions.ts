@@ -1,3 +1,4 @@
+import { HttpException } from "@nestjs/common";
 import { ResponseStatus } from "./constants";
 
 type ResponseData = {
@@ -28,6 +29,13 @@ export function createResponse(
         response.data = data;
     }
 
+    // Check if it's an error status, and throw an HttpException
+    if (status.httpCode >= 400) {
+        throw new HttpException(response, status.httpCode);  // Throw HttpException with the response and the status code
+    }
+
+    // If it's not an error, return the response
     return response;
 }
+
 
