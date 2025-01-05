@@ -1,6 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateDailyAttendanceDto } from './create-daily-attendance.dto';
-import { AttendanceStatus } from 'src/utils/enums';
+import { Enum_AttendanceStatus } from 'src/utils/enums';
 import { IsString, IsOptional, IsInt, IsEnum } from 'class-validator';
 
 
@@ -33,11 +33,11 @@ export class UpdateDailyAttendanceDto extends PartialType(CreateDailyAttendanceD
     @IsOptional()
     check_out?: string; // Optional: Check-out time (Optional for updates)
 
-    @IsEnum(AttendanceStatus)
+    @IsEnum(Enum_AttendanceStatus)
     @IsOptional()
-    status_clock_in?: AttendanceStatus; // Status of the clock-in (Optional for updates)
+    status_clock_in?: Enum_AttendanceStatus; // Status of the clock-in (Optional for updates)
 
-    @IsEnum(AttendanceStatus)
+    @IsEnum(Enum_AttendanceStatus)
     @IsOptional()
-    status_clock_out?: AttendanceStatus; // Status of the clock-out (Optional for updates)
+    status_clock_out?: Enum_AttendanceStatus; // Status of the clock-out (Optional for updates)
 }

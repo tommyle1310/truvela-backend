@@ -1,5 +1,5 @@
 import { IsString, IsEnum, IsOptional, IsInt } from 'class-validator';
-import { ShiftType } from 'src/utils/enums';
+import { Enum_ShiftType } from 'src/utils/enums';
 
 
 
@@ -9,7 +9,7 @@ export class CreateStaffShiftDto {
     id: string;
 
     @IsString()
-    shift_type: ShiftType;
+    shift_type: Enum_ShiftType;
 
     @IsString()
     shift_start: string;

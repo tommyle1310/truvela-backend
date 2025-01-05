@@ -29,16 +29,29 @@ export enum Enum_Role {
     STAFF = 'Staff',
 }
 
-export enum ShiftType {
+export enum Enum_ShiftType {
     MORNING = 'Morning',
     EVENING = 'Evening',
     NIGHT = 'Night', // Example for another shift type, can be extended as needed
 }
 
-export enum AttendanceStatus {
+export enum Enum_AttendanceStatus {
     ON_TIME = 'On time',
     LATE = 'Late',
     EARLY = 'Early',
     OVERTIME_EARLY = 'Early check-in',
     OVERTIME_LATE = 'Overtime check-out',
+}
+
+export enum Enum_CandidateStatus {
+    APPLIED = 'Applied',
+    IN_PROGRESS = 'In progress',
+    SELECTED = 'Selected',
+    REJECTED = 'Rejected',
+}
+
+export enum Enum_DailyStaffAvailabilityStatus {
+    OFF = 'Off',
+    OCCUPIED = 'Occupied',
+    ASSIGNED = 'Assigned'
 }

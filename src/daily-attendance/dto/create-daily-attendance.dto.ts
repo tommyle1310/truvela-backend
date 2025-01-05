@@ -1,5 +1,5 @@
 import { IsString, IsOptional, IsInt, IsEnum } from 'class-validator';
-import { AttendanceStatus } from 'src/utils/enums';
+import { Enum_AttendanceStatus } from 'src/utils/enums';
 
 
 
@@ -24,9 +24,9 @@ export class CreateDailyAttendanceDto {
     @IsOptional()
     check_out?: string; // Optional: Check-out time (could be empty if not applicable)
 
-    @IsEnum(AttendanceStatus)
-    status_clock_in: AttendanceStatus; // Status of the clock-in (e.g., ON_TIME, LATE)
+    @IsEnum(Enum_AttendanceStatus)
+    status_clock_in: Enum_AttendanceStatus; // Status of the clock-in (e.g., ON_TIME, LATE)
 
-    @IsEnum(AttendanceStatus)
-    status_clock_out: AttendanceStatus; // Status of the clock-out (e.g., ON_TIME, LATE)
+    @IsEnum(Enum_AttendanceStatus)
+    status_clock_out: Enum_AttendanceStatus; // Status of the clock-out (e.g., ON_TIME, LATE)
 }

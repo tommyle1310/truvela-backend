@@ -12,9 +12,11 @@ import { SpasModule } from './spas/spas.module';
 import { ServiceCategoriesModule } from './service-categories/service-categories.module';
 import { StaffShiftsModule } from './staff-shifts/staff-shifts.module';
 import { DailyAttendanceModule } from './daily-attendance/daily-attendance.module';
+import { HrCandidatesModule } from './hr-candidates/hr-candidates.module';
+import { DailyStaffAvailabilityModule } from './daily-staff-availability/daily-staff-availability.module';
 
 @Module({
-  imports: [FirebaseModule, UsersModule, CustomersModule, DepartmentsModule, StaffsModule, JobsModule, PermissionsModule, SpasModule, ServiceCategoriesModule, StaffShiftsModule, DailyAttendanceModule],
+  imports: [FirebaseModule, UsersModule, CustomersModule, DepartmentsModule, StaffsModule, JobsModule, PermissionsModule, SpasModule, ServiceCategoriesModule, StaffShiftsModule, DailyAttendanceModule, HrCandidatesModule, DailyStaffAvailabilityModule],
   controllers: [AppController],  // Do NOT include TestUsersController here
   providers: [AppService],
 })
