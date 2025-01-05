@@ -25,12 +25,20 @@ export enum Enum_Gender {
 }
 
 export enum Enum_Role {
-    CUSTOMER = 'CUSTOMER',
-    STAFF = 'STAFF',
+    CUSTOMER = 'Customer',
+    STAFF = 'Staff',
 }
 
 export enum ShiftType {
-    MORNING = 'MORNING',
-    EVENING = 'EVENING',
-    NIGHT = 'NIGHT', // Example for another shift type, can be extended as needed
+    MORNING = 'Morning',
+    EVENING = 'Evening',
+    NIGHT = 'Night', // Example for another shift type, can be extended as needed
+}
+
+export enum AttendanceStatus {
+    ON_TIME = 'On time',
+    LATE = 'Late',
+    EARLY = 'Early',
+    OVERTIME_EARLY = 'Early check-in',
+    OVERTIME_LATE = 'Overtime check-out',
 }

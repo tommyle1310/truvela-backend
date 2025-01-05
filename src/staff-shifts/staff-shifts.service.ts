@@ -13,13 +13,13 @@ export class StaffShiftService {
     // Check if shift with the same type already exists for the time period
     const existingShift = await this.firebaseService.queryCollection(
       'staffShifts',
-      'shift_type',
-      createStaffShiftDto.shift_type
+      'id',
+      createStaffShiftDto.id
     );
 
     if (existingShift.length > 0) {
       throw new HttpException(
-        createResponse('DuplicatedRecord', 'Shift type already exists for this period'),
+        createResponse('DuplicatedRecord', 'Shift id already exists for this period'),
         HttpStatus.CONFLICT
       );
     }
@@ -33,7 +33,7 @@ export class StaffShiftService {
       updated_at: Math.floor(Date.now() / 1000),
     };
 
-    const staffShiftId = `STFS_${staffShiftIdCounter}`;
+    const staffShiftId = `SHIFT_${staffShiftIdCounter}`;
 
     // Log the data before performing the Firestore operation
     console.log('Creating staff shift with data:', { id: staffShiftId, ...staffShiftData });
@@ -66,13 +66,36 @@ export class StaffShiftService {
   async findOne(id: string) {
     // Fetch the staff shift document from the 'staffShifts' collection
     const staffShiftDoc = await this.firebaseService.getDocument('staffShifts', id);
+    console.log("check?", staffShiftDoc, 'id?', id);
 
     // Check if the staff shift exists
     if (!staffShiftDoc) {
       return createResponse('NotFound', 'Staff shift not found');
     }
 
-    return createResponse('OK', staffShiftDoc, 'Fetched staff shift successfully');
+    // If you want to allow updating the document's ID (or other fields) here:
+    // Example: If you want to update certain fields or change the document's ID
+    const updateData = {
+      ...staffShiftDoc,
+      updated_at: Math.floor(Date.now() / 1000), // Adding updated_at timestamp if needed
+    };
+
+    try {
+      // Update the staff shift document in the Firestore collection
+      // If the document ID is the same, no need to change it, else we would update it here
+      await this.firebaseService.updateDocument('staffShifts', id, updateData);
+
+      // Fetch the updated staff shift data to return (to reflect changes)
+      const updatedStaffShift = await this.firebaseService.getDocument('staffShifts', id);
+
+      return createResponse('OK', updatedStaffShift, 'Updated staff shift successfully');
+    } catch (error) {
+      console.error('Error updating staff shift in Firestore:', error);
+      throw new HttpException(
+        createResponse('ServerError', 'Failed to update staff shift'),
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
   }
 
   async update(id: string, updateStaffShiftDto: UpdateStaffShiftDto) {
@@ -92,7 +115,32 @@ export class StaffShiftService {
       updated_at: currentTimestamp, // Add the updated_at timestamp
     };
 
-    // Update the staff shift document with the provided data
+    // Check if there's a new 'id' in the request body (i.e., if the ID needs to be changed)
+    if (updateStaffShiftDto.id && updateStaffShiftDto.id !== id) {
+      const newId = updateStaffShiftDto.id;
+
+      try {
+        // Create a new document with the new ID
+        await this.firebaseService.createDocument('staffShifts', newId, {
+          ...updateData,
+          created_at: staffShift.created_at,  // Retain the original 'created_at'
+        });
+
+        // After creating the document with the new ID, delete the old one
+        await this.firebaseService.deleteDocument('staffShifts', id);
+
+        // Return the response with the updated data, now under the new ID
+        return createResponse('OK', { id: newId, ...updateData }, 'Staff shift updated successfully with new ID');
+      } catch (error) {
+        console.error('Error updating staff shift ID in Firestore:', error);
+        throw new HttpException(
+          createResponse('ServerError', 'Failed to update staff shift with new ID'),
+          HttpStatus.INTERNAL_SERVER_ERROR
+        );
+      }
+    }
+
+    // If no new ID is provided, update the current document normally
     try {
       await this.firebaseService.updateDocument('staffShifts', id, updateData);
     } catch (error) {
@@ -108,6 +156,7 @@ export class StaffShiftService {
 
     return createResponse('OK', updatedStaffShift, 'Updated staff shift successfully');
   }
+
 
   async remove(id: string) {
     // Check if the staff shift exists

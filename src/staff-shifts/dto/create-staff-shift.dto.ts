@@ -4,6 +4,10 @@ import { ShiftType } from 'src/utils/enums';
 
 
 export class CreateStaffShiftDto {
+    @IsOptional()
+    @IsString()
+    id: string;
+
     @IsString()
     shift_type: ShiftType;
 
