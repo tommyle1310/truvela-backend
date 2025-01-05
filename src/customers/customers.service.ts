@@ -5,14 +5,6 @@ import { FirebaseService } from 'src/firebase/firebase.service';
 import { createResponse } from 'src/utils/functions';
 import * as bcrypt from 'bcrypt'
 
-
-interface Customer {
-  id: string;
-  email: string;
-  phone: string;
-  // other properties...
-}
-
 @Injectable()
 export class CustomersService {
   constructor(private readonly firebaseService: FirebaseService) { }
@@ -95,8 +87,11 @@ export class CustomersService {
       updateCustomerDto.password = hashedPassword; // Replace password with hashed password
     }
 
-    // Convert the UpdateCustomerDto to a plain object to avoid serialization issues
-    const updateData = JSON.parse(JSON.stringify(updateCustomerDto));
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+
+    const updateData = {
+      ...JSON.parse(JSON.stringify(updateCustomerDto)),
+    };
 
     // Update the customer document with the provided data (now with hashed password if applicable)
     await this.firebaseService.updateDocument('customers', id, updateData);

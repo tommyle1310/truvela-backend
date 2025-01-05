@@ -28,3 +28,9 @@ export enum Enum_Role {
     CUSTOMER = 'CUSTOMER',
     STAFF = 'STAFF',
 }
+
+export enum ShiftType {
+    MORNING = 'MORNING',
+    EVENING = 'EVENING',
+    NIGHT = 'NIGHT', // Example for another shift type, can be extended as needed
+}
