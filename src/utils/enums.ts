@@ -65,3 +65,11 @@ export enum Enum_WeekDays {
     SAT = 'sat',
     SUN = 'sun',
 }
+
+export enum Enum_PayrollStatus {
+    PENDING = 'Pending',
+    APPROVED = "Approved",
+    PAID = "Paid",
+    COMPLETED = "Completed",
+    ON_HOLD = "On hold"
+}

@@ -16,9 +16,11 @@ import { HrCandidatesModule } from './hr-candidates/hr-candidates.module';
 import { DailyStaffAvailabilityModule } from './daily-staff-availability/daily-staff-availability.module';
 import { WeeklyStaffAvailabilityModule } from './weekly-staff-availability/weekly-staff-availability.module';
 import { MonthlyStaffScheduleModule } from './monthly-staff-schedule/monthly-staff-schedule.module';
+import { SalaryDefinitionsModule } from './salary-definitions/salary-definitions.module';
+import { PayrollsModule } from './payrolls/payrolls.module';
 
 @Module({
-  imports: [FirebaseModule, UsersModule, CustomersModule, DepartmentsModule, StaffsModule, JobsModule, PermissionsModule, SpasModule, ServiceCategoriesModule, StaffShiftsModule, DailyAttendanceModule, HrCandidatesModule, DailyStaffAvailabilityModule, WeeklyStaffAvailabilityModule, MonthlyStaffScheduleModule],
+  imports: [FirebaseModule, UsersModule, CustomersModule, DepartmentsModule, StaffsModule, JobsModule, PermissionsModule, SpasModule, ServiceCategoriesModule, StaffShiftsModule, DailyAttendanceModule, HrCandidatesModule, DailyStaffAvailabilityModule, WeeklyStaffAvailabilityModule, MonthlyStaffScheduleModule, SalaryDefinitionsModule, PayrollsModule],
   controllers: [AppController],  // Do NOT include TestUsersController here
   providers: [AppService],
 })
