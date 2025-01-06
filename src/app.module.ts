@@ -14,9 +14,11 @@ import { StaffShiftsModule } from './staff-shifts/staff-shifts.module';
 import { DailyAttendanceModule } from './daily-attendance/daily-attendance.module';
 import { HrCandidatesModule } from './hr-candidates/hr-candidates.module';
 import { DailyStaffAvailabilityModule } from './daily-staff-availability/daily-staff-availability.module';
+import { WeeklyStaffAvailabilityModule } from './weekly-staff-availability/weekly-staff-availability.module';
+import { MonthlyStaffScheduleModule } from './monthly-staff-schedule/monthly-staff-schedule.module';
 
 @Module({
-  imports: [FirebaseModule, UsersModule, CustomersModule, DepartmentsModule, StaffsModule, JobsModule, PermissionsModule, SpasModule, ServiceCategoriesModule, StaffShiftsModule, DailyAttendanceModule, HrCandidatesModule, DailyStaffAvailabilityModule],
+  imports: [FirebaseModule, UsersModule, CustomersModule, DepartmentsModule, StaffsModule, JobsModule, PermissionsModule, SpasModule, ServiceCategoriesModule, StaffShiftsModule, DailyAttendanceModule, HrCandidatesModule, DailyStaffAvailabilityModule, WeeklyStaffAvailabilityModule, MonthlyStaffScheduleModule],
   controllers: [AppController],  // Do NOT include TestUsersController here
   providers: [AppService],
 })
