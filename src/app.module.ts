@@ -18,9 +18,12 @@ import { WeeklyStaffAvailabilityModule } from './weekly-staff-availability/weekl
 import { MonthlyStaffScheduleModule } from './monthly-staff-schedule/monthly-staff-schedule.module';
 import { SalaryDefinitionsModule } from './salary-definitions/salary-definitions.module';
 import { PayrollsModule } from './payrolls/payrolls.module';
+import { OvertimeReportsModule } from './overtime-reports/overtime-reports.module';
+import { PayrollAdjustmentsModule } from './payroll-adjustments/payroll-adjustments.module';
+import { PayrollAdjustmentReportsModule } from './payroll-adjustment-reports/payroll-adjustment-reports.module';
 
 @Module({
-  imports: [FirebaseModule, UsersModule, CustomersModule, DepartmentsModule, StaffsModule, JobsModule, PermissionsModule, SpasModule, ServiceCategoriesModule, StaffShiftsModule, DailyAttendanceModule, HrCandidatesModule, DailyStaffAvailabilityModule, WeeklyStaffAvailabilityModule, MonthlyStaffScheduleModule, SalaryDefinitionsModule, PayrollsModule],
+  imports: [FirebaseModule, UsersModule, CustomersModule, DepartmentsModule, StaffsModule, JobsModule, PermissionsModule, SpasModule, ServiceCategoriesModule, StaffShiftsModule, DailyAttendanceModule, HrCandidatesModule, DailyStaffAvailabilityModule, WeeklyStaffAvailabilityModule, MonthlyStaffScheduleModule, SalaryDefinitionsModule, PayrollsModule, OvertimeReportsModule, PayrollAdjustmentsModule, PayrollAdjustmentReportsModule],
   controllers: [AppController],  // Do NOT include TestUsersController here
   providers: [AppService],
 })

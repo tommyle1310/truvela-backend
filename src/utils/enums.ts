@@ -73,3 +73,13 @@ export enum Enum_PayrollStatus {
     COMPLETED = "Completed",
     ON_HOLD = "On hold"
 }
+
+
+export enum Enum_PayrollAdjustmentType {
+    BONUS = 'Bonus',
+    REIMBURSEMENT = "Reimbursement",
+    OPERATION_DEDUCTION = "Operation deduction",
+    OTHER_DEDUCTION = 'Other deduction',
+    BENEFIT = 'Benefit',
+    TAX = 'Tax'
+}
