@@ -48,11 +48,51 @@ export class StaffsService {
   }
 
   // Get all staffs
-  async findAll() {
+  async findAll(page: number = 1, limit: number = 10) {
     try {
-      const staffs = await this.firebaseService.getCollection('staffs'); // Fetch all staff
-      console.log('Fetched staffs:', staffs);
-      return createResponse('OK', staffs);
+      // Calculate offset (skip number of items based on the current page)
+      const offset = (page - 1) * limit;
+
+      // Fetch the staff count to calculate total pages
+      const staffCount = await this.firebaseService.getCollectionCount('staffs');
+
+      // Calculate total pages
+      const totalPages = Math.ceil(staffCount / limit);
+
+      // Fetch the list of staff members with pagination
+      const staffs = await this.firebaseService.getCollectionWithPagination(
+        'staffs',
+        'first_name',
+        'desc',
+        limit,
+        offset
+      );
+
+      // Prepare to fetch job and department details for each staff
+      const staffsWithDetails = await Promise.all(staffs.map(async (staff) => {
+        // Fetch job details using staff's job ID
+        const jobDetails = await this.firebaseService.getDocument('jobs', staff.job);
+
+        // Fetch department details using staff's department ID
+        const departmentDetails = await this.firebaseService.getDocument('departments', staff.department);
+
+        // Merge the job and department details into the staff data
+        return {
+          ...staff,
+          job: jobDetails ? jobDetails : null,
+          department: departmentDetails ? departmentDetails : null,
+        };
+      }));
+
+      // Return the response with metadata and staff data
+      return createResponse('OK', {
+        staffs: staffsWithDetails,
+        current_page: page,
+        total_pages: totalPages,
+        total_items: staffCount,
+        items_per_page: limit,
+      });
+
     } catch (error) {
       console.error('Error fetching staffs:', error);
       throw new HttpException(
@@ -61,6 +101,10 @@ export class StaffsService {
       );
     }
   }
+
+
+
+
 
   // Get a specific staff by ID
   async findOne(id: string) {

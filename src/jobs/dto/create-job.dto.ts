@@ -25,13 +25,11 @@ export class CreateJobDto {
     status: 'ACTIVE' | 'INACTIVE'; // Job status
 
     @IsOptional()
-    @IsArray()
     @IsString()
     skills_required: string; // Required skills, array of strings
 
 
     @IsOptional()
-    @IsArray()
     @IsString()
     benefits: string; // List of benefits offered by the job
 

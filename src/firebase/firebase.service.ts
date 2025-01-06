@@ -13,13 +13,76 @@ export class FirebaseService {
         this.firestore = admin.firestore();
     }
 
-    async getCollection(collectionName: string): Promise<FirebaseFirestore.DocumentData[]> {
-        const snapshot = await this.firestore.collection(collectionName).get();
+    // Method to get the count of documents in a collection
+    async getCollectionCount(collectionName: string): Promise<number> {
+        try {
+            const snapshot = await this.firestore.collection(collectionName).get();
+            return snapshot.size;  // Return the size of the snapshot (number of documents)
+        } catch (error) {
+            console.error('Error fetching collection count:', error);
+            throw new Error('Failed to fetch collection count');
+        }
+    }
+
+    // Method to fetch a paginated list of documents from a collection
+    async getCollectionWithPagination(
+        collectionName: string,
+        orderByField: string,
+        orderDirection: 'asc' | 'desc' = 'desc', // Default to descending order
+        limitCount: number,
+        offsetCount: number
+    ): Promise<FirebaseFirestore.DocumentData[]> {
+        try {
+            let query: FirebaseFirestore.Query = this.firestore.collection(collectionName);
+
+            // Order by the given field and direction
+            query = query.orderBy(orderByField, orderDirection);
+
+            // Apply pagination (limit and offset)
+            query = query.limit(limitCount).offset(offsetCount);
+
+            // Get the snapshot from Firestore
+            const snapshot = await query.get();
+
+            // Map the snapshot to return documents with their IDs and data
+            return snapshot.docs.map(doc => {
+                const data = doc.data();
+                return { id: doc.id, ...data };
+            });
+        } catch (error) {
+            console.error('Error fetching paginated collection:', error);
+            throw new Error('Failed to fetch paginated collection');
+        }
+    }
+
+    async getCollection(
+        collectionName: string,
+        orderByField?: string,
+        orderDirection: 'asc' | 'desc' = 'desc', // Default order direction is descending
+        limitCount?: number
+    ): Promise<FirebaseFirestore.DocumentData[]> {
+        let query: FirebaseFirestore.Query = this.firestore.collection(collectionName);
+
+        // Apply ordering if orderByField is provided
+        if (orderByField) {
+            query = query.orderBy(orderByField, orderDirection);
+        }
+
+        // Apply limit if limitCount is provided
+        if (limitCount) {
+            query = query.limit(limitCount);
+        }
+
+        // Now fetch the data from the query and get the snapshot
+        const snapshot = await query.get(); // This fetches the result of the query
+
+        // Map the snapshot to an array of document data
         return snapshot.docs.map(doc => {
             const data = doc.data();
             return { id: doc.id, ...data };  // Attach the document ID to the data
         });
     }
+
 
 
     // Add a method to query Firestore collections

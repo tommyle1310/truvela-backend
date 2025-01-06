@@ -69,4 +69,12 @@ export class UpdateStaffDto extends PartialType(CreateStaffDto) {
     @IsOptional()
     @IsString()
     account_access: string[]; // List of account accesses (permissions or roles)
+
+    @IsOptional()
+    @IsNumber()
+    created_at: number; // Timestamp for creation
+
+    @IsOptional()
+    @IsNumber()
+    updated_at: number; // Timestamp for last update
 }
