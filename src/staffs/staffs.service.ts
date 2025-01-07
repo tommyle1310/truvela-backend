@@ -10,7 +10,6 @@ export class StaffsService {
 
   // Create a new staff
   async create(createStaffDto: CreateStaffDto) {
-    console.log('Checking for existing staff...');
 
     // Check if the staff email already exists in Firebase
     const existingStaff = await this.firebaseService.queryCollection('staffs', 'email', createStaffDto.email);
@@ -28,11 +27,10 @@ export class StaffsService {
 
     const staffData = {
       ...createStaffDto,
+      id: staffId,
       created_at: Math.floor(Date.now() / 1000), // Set creation timestamp
     };
 
-    // Log the data before performing the Firestore operation
-    console.log('Creating staff with data:', { id: staffId, ...staffData });
 
     try {
       await this.firebaseService.createDocument('staffs', staffId, staffData); // Store staff in Firestore
@@ -131,18 +129,57 @@ export class StaffsService {
       return createResponse('NotFound', 'Staff not found');
     }
 
-    // Convert the UpdateStaffDto to a plain object to avoid serialization issues
-    const updateData = JSON.parse(JSON.stringify(updateStaffDto));
+    // Add the current timestamp for the updated_at field
+    const currentTimestamp = Math.floor(Date.now() / 1000);
 
-    // Update staff in Firestore
-    await this.firebaseService.updateDocument('staffs', id, updateData);
-    console.log('cehckllllllll', updateData)
+    // Convert the UpdateStaffDto to a plain object and include updated_at
+    const updateData = {
+      ...JSON.parse(JSON.stringify(updateStaffDto)),
+      updated_at: currentTimestamp, // Add the updated_at timestamp
+    };
+
+    // Check if there's a new 'id' in the request body (i.e., if the ID needs to be changed)
+    if (updateStaffDto.id && updateStaffDto.id !== id) {
+      const newId = updateStaffDto.id;
+
+      try {
+        // Create a new document with the new ID
+        await this.firebaseService.createDocument('staffs', newId, {
+          ...updateData,
+          created_at: staff.created_at,  // Retain the original 'created_at'
+        });
+
+        // After creating the document with the new ID, delete the old one
+        await this.firebaseService.deleteDocument('staffs', id);
+
+        // Return the response with the updated data, now under the new ID
+        return createResponse('OK', { id: newId, ...updateData }, 'Staff updated successfully with new ID');
+      } catch (error) {
+        console.error('Error updating staff ID in Firestore:', error);
+        throw new HttpException(
+          createResponse('ServerError', 'Failed to update staff with new ID'),
+          HttpStatus.INTERNAL_SERVER_ERROR
+        );
+      }
+    }
+
+    // If no new ID is provided, update the current document normally
+    try {
+      await this.firebaseService.updateDocument('staffs', id, updateData);
+    } catch (error) {
+      console.error('Error updating staff:', error);
+      throw new HttpException(
+        createResponse('ServerError', 'Failed to update staff'),
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
 
     // Fetch the updated staff data
     const updatedStaff = await this.firebaseService.getDocument('staffs', id);
 
     return createResponse('OK', updatedStaff, 'Staff updated successfully');
   }
+
 
   // Remove a staff by ID
   async remove(id: string) {

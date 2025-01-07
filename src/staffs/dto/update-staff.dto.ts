@@ -4,6 +4,11 @@ import { CreateStaffDto } from './create-staff.dto';
 import { Enum_Gender, Enum_Level } from 'src/utils/enums';
 
 export class UpdateStaffDto extends PartialType(CreateStaffDto) {
+
+    @IsOptional()
+    @IsString()
+    id?: string; // Staff first name
+
     @IsOptional()
     @IsString()
     first_name: string; // Staff first name
@@ -18,6 +23,10 @@ export class UpdateStaffDto extends PartialType(CreateStaffDto) {
     @IsOptional()
     @IsEmail()
     email: string; // Staff email
+
+    @IsOptional()
+    @IsString()
+    address: string
 
     @IsOptional()
     @IsEnum(Enum_Gender)

@@ -14,15 +14,32 @@ export class FirebaseService {
     }
 
     // Method to get the count of documents in a collection
-    async getCollectionCount(collectionName: string): Promise<number> {
+    async getCollectionCount(
+        collectionName: string,
+        field?: string,  // Optional parameter to filter by field
+        value?: string   // Optional parameter to filter by field value
+    ): Promise<number> {
         try {
-            const snapshot = await this.firestore.collection(collectionName).get();
-            return snapshot.size;  // Return the size of the snapshot (number of documents)
+            // Start with the collection reference
+            let query: FirebaseFirestore.Query = this.firestore.collection(collectionName);
+
+            // If field and value are provided, apply the query filter
+            if (field && value) {
+                console.log(`Querying collection '${collectionName}' where ${field} == ${value}`);
+                query = query.where(field, '==', value);  // Apply the 'where' filter
+            }
+
+            // Get the snapshot from Firestore
+            const snapshot = await query.get();
+
+            // Return the size of the snapshot (number of documents)
+            return snapshot.size;
         } catch (error) {
             console.error('Error fetching collection count:', error);
             throw new Error('Failed to fetch collection count');
         }
     }
+
 
     // Method to fetch a paginated list of documents from a collection
     async getCollectionWithPagination(
@@ -86,7 +103,12 @@ export class FirebaseService {
 
 
     // Add a method to query Firestore collections
-    async queryCollection(collectionName: string, field?: string, value?: string): Promise<FirebaseFirestore.DocumentData[]> {
+    async queryCollection(
+        collectionName: string,
+        field?: string,
+        value?: string,
+        limitCount?: number // Add limitCount as an optional parameter
+    ): Promise<FirebaseFirestore.DocumentData[]> {
         // Start with the collection reference
         let query: FirebaseFirestore.Query = this.firestore.collection(collectionName);
 
@@ -94,6 +116,11 @@ export class FirebaseService {
         if (field && value) {
             console.log(`Querying collection '${collectionName}' where ${field} == ${value}`);
             query = query.where(field, '==', value); // Apply the 'where' filter
+        }
+
+        // Apply the limit if limitCount is provided
+        if (limitCount) {
+            query = query.limit(limitCount); // Limit the number of documents returned
         }
 
         // Execute the query and get the snapshot of matching documents
@@ -114,6 +141,7 @@ export class FirebaseService {
             return doc.data();
         });
     }
+
 
 
 

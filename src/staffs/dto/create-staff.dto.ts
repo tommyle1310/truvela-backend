@@ -2,6 +2,10 @@ import { IsString, IsEnum, IsEmail, IsOptional, IsNumber, IsDateString, IsBoolea
 import { Enum_Gender, Enum_Level } from 'src/utils/enums'; // Assuming you have EnumLevel defined
 
 export class CreateStaffDto {
+    @IsOptional()
+    @IsString()
+    id?: string; // Staff first name
+
     @IsString()
     first_name: string; // Staff first name
 
@@ -19,6 +23,10 @@ export class CreateStaffDto {
     @IsOptional()
     @IsEnum(Enum_Gender)
     gender: Enum_Gender; // Gender
+
+    @IsOptional()
+    @IsString()
+    address: string
 
     @IsOptional()
     @IsNumber()
