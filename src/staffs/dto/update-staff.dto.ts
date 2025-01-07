@@ -40,6 +40,10 @@ export class UpdateStaffDto extends PartialType(CreateStaffDto) {
     @IsString()
     job: string; // Job ID (e.g., JOB_1)
 
+    @IsOptional()
+    @IsNumber()
+    active_points: number;
+
     @IsBoolean()
     is_fulltime: boolean; // Whether the staff member is full-time or not
 

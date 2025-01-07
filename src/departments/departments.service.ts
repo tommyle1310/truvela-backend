@@ -50,9 +50,21 @@ export class DepartmentsService {
   // Get all departments
   async findAll() {
     try {
-      const departments = await this.firebaseService.getCollection('departments'); // Fetch departments
-      console.log('Fetched departments:', departments);
-      return createResponse('OK', departments);
+      // Fetch all departments
+      const departments = await this.firebaseService.getCollection('departments');
+
+      // Map through the departments and fetch the staff count for each department
+      const departmentsWithStaffCount = await Promise.all(departments.map(async (department) => {
+        // Fetch the number of staff in this department
+        const staffCount = await this.firebaseService.queryCollection('staffs', 'department', department.id);
+
+        return {
+          ...department,
+          total_staffs: staffCount.length, // Staff count is the number of records in the 'staffs' collection for this department
+        };
+      }));
+
+      return createResponse('OK', departmentsWithStaffCount);
     } catch (error) {
       console.error('Error fetching departments:', error);
       throw new HttpException(
@@ -62,16 +74,32 @@ export class DepartmentsService {
     }
   }
 
-  // Get a specific department by ID
+  // The `findOne` method fetches a specific department by ID and also returns the total number of staff in that department
   async findOne(id: string) {
-    const department = await this.firebaseService.getDocument('departments', id); // Fetch department by ID
+    try {
+      // Fetch the department by ID
+      const department = await this.firebaseService.getDocument('departments', id);
 
-    if (!department) {
-      return createResponse('NotFound', 'Department not found');
+      if (!department) {
+        return createResponse('NotFound', 'Department not found');
+      }
+
+      // Fetch the number of staff in this department
+      const staffCount = await this.firebaseService.queryCollection('staffs', 'department', id);
+
+      return createResponse('OK', {
+        ...department,
+        total_staffs: staffCount.length, // Add total staff count to the department data
+      }, 'Department retrieved successfully');
+    } catch (error) {
+      console.error('Error fetching department:', error);
+      throw new HttpException(
+        createResponse('ServerError', 'Failed to fetch department'),
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
-
-    return createResponse('OK', department, 'Department retrieved successfully');
   }
+
 
   // Update an existing department
   async update(id: string, updateDepartmentDto: UpdateDepartmentDto) {

@@ -25,6 +25,10 @@ export class CreateStaffDto {
     date_of_birth: number; // Date of birth as timestamp
 
     @IsOptional()
+    @IsNumber()
+    active_points: number;
+
+    @IsOptional()
     @IsObject()
     avatar: { url: string; key: string }; // Avatar image (with URL and key)
 
