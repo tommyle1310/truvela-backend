@@ -75,11 +75,13 @@ export class StaffsService {
 
         // Fetch department details using staff's department ID
         const departmentDetails = await this.firebaseService.getDocument('departments', staff.department);
+        const work_officeDetails = await this.firebaseService.getDocument('spas', staff.work_office);
 
         // Merge the job and department details into the staff data
         return {
           ...staff,
           job: jobDetails ? jobDetails : null,
+          work_office: work_officeDetails ? work_officeDetails : null,
           department: departmentDetails ? departmentDetails : null,
         };
       }));
@@ -109,12 +111,16 @@ export class StaffsService {
   // Get a specific staff by ID
   async findOne(id: string) {
     const staff = await this.firebaseService.getDocument('staffs', id); // Fetch staff by ID
+    const jobDetails = await this.firebaseService.getDocument('jobs', staff.job);
 
+    // Fetch department details using staff's department ID
+    const departmentDetails = await this.firebaseService.getDocument('departments', staff.department);
+    const work_officeDetails = await this.firebaseService.getDocument('spas', staff.work_office);
     if (!staff) {
       return createResponse('NotFound', 'Staff not found');
     }
 
-    return createResponse('OK', staff, 'Staff retrieved successfully');
+    return createResponse('OK', { ...staff, work_office: work_officeDetails, department: departmentDetails, job: jobDetails }, 'Staff retrieved successfully');
   }
 
   // Update an existing staff
@@ -130,6 +136,7 @@ export class StaffsService {
 
     // Update staff in Firestore
     await this.firebaseService.updateDocument('staffs', id, updateData);
+    console.log('cehckllllllll', updateData)
 
     // Fetch the updated staff data
     const updatedStaff = await this.firebaseService.getDocument('staffs', id);
