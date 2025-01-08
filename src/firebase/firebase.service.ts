@@ -106,7 +106,7 @@ export class FirebaseService {
     async queryCollection(
         collectionName: string,
         field?: string,
-        value?: string,
+        value?: string | number,
         limitCount?: number // Add limitCount as an optional parameter
     ): Promise<FirebaseFirestore.DocumentData[]> {
         // Start with the collection reference

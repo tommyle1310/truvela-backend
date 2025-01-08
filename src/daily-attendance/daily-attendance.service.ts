@@ -111,6 +111,50 @@ export class DailyAttendanceService {
     const attendanceRecords = await this.firebaseService.getCollection('dailyAttendance');
     return createResponse('OK', attendanceRecords);
   }
+  async findByDate(date: number) {
+    try {
+      // Fetch all daily attendance records for the given date
+      let attendanceRecords = await this.firebaseService.queryCollection('dailyAttendance', 'date', date);
+
+      // For each attendance record, fetch the corresponding staff details and department details
+      attendanceRecords = await Promise.all(attendanceRecords.map(async (item) => {
+        // Fetch staff details using the staff_id from the attendance record
+        const staff = await this.firebaseService.getDocument('staffs', item.staff_id);
+
+        // Check if the staff exists and has a department_id
+        if (!staff) {
+          return {
+            ...item, // Keep the attendance record data
+            staff: null, // If staff doesn't exist, set staff to null
+          };
+        }
+
+        // Fetch department details using the department_id from the staff (if available)
+        const department = staff.department
+          ? await this.firebaseService.getDocument('departments', staff.department)
+          : null; // If no department_id is available, set department to null
+
+        // Merge the attendance record, staff details, and department details
+        return {
+          ...item, // Spread the existing attendance record data
+          staff: {
+            ...staff, // Include all staff details
+            department, // Add the department details to the staff data
+          },
+        };
+      }));
+
+      // Return the merged attendance data with staff and department details
+      return createResponse('OK', attendanceRecords);
+
+    } catch (error) {
+      console.error('Error fetching attendance by date:', error);
+      return createResponse('ServerError', 'Failed to fetch attendance data');
+    }
+  }
+
+
+
 
   async remove(id: string) {
     // Check if the daily attedance exists

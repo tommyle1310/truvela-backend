@@ -17,6 +17,11 @@ export class DailyAttendanceController {
     return this.dailyAttendanceService.findAll();
   }
 
+  @Get('/date/:date')
+  findbyDate(@Param('date') date: number) {
+    return this.dailyAttendanceService.findByDate(date)
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.dailyAttendanceService.findOne(id);
