@@ -39,15 +39,30 @@ export class HrCandidatesService {
   }
 
   async findAll() {
-    // Fetch all HR candidates from the 'hrCandidates' collection
-    const hrCandidates = await this.firebaseService.getCollection('hrCandidates');
+    try {
+      // Fetch all HR candidates from the 'hrCandidates' collection
+      let hrCandidates = await this.firebaseService.getCollection('hrCandidates');
 
-    // Log the fetched HR candidates
-    console.log('Fetched HR candidates:', hrCandidates);
+      // Fetch job details for each HR candidate and merge it with the candidate data
+      hrCandidates = await Promise.all(hrCandidates.map(async (item) => {
+        // Fetch the job details using the applied_for field
+        const jobDetails = await this.firebaseService.getDocument('jobs', item.applied_for);
 
-    // Return the fetched HR candidates
-    return createResponse('OK', hrCandidates);
+        return {
+          ...item,  // Spread the existing HR candidate data
+          job: jobDetails  // Add the fetched job details to each HR candidate
+        };
+      }));
+
+      // Return the merged HR candidate data with job details
+      return createResponse('OK', hrCandidates);
+
+    } catch (error) {
+      console.error('Error fetching HR candidates:', error);
+      return createResponse('ServerError', 'Failed to fetch HR candidates');
+    }
   }
+
 
   async findOne(id: string) {
     // Fetch the HR candidate document from the 'hrCandidates' collection
