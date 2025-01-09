@@ -61,9 +61,50 @@ export class SalaryDefinitionsService {
   // Get all salary definitions
   async findAll() {
     try {
-      const salaryDefinitions = await this.firebaseService.getCollection('salaryDefinition'); // Fetch all salary definitions
+      // Fetch all salary definitions
+      const salaryDefinitions = await this.firebaseService.getCollection('salaryDefinition');
       console.log('Fetched salary definitions:', salaryDefinitions);
-      return createResponse('OK', salaryDefinitions);
+
+      // Initialize a map to group by department
+      const departmentMap: { [key: string]: any } = {};
+
+      // For each salary definition, replace job_title with job details and group by department
+      const updatedSalaryDefinitions = await Promise.all(salaryDefinitions.map(async (item) => {
+        // Fetch job details where job title (id) matches the salary definition's job_title
+        const jobDetails = await this.firebaseService.getDocument('jobs', item.job_title);
+
+        // Fetch the department details using the department id from job details
+        const department = await this.firebaseService.getDocument('departments', jobDetails.department);
+
+        // Create the new structure for the salary definition with only the relevant fields
+        const salaryWithJobAndDepartment = {
+          id: item.id, // Salary Definition ID
+          level: item.job_level, // Job Level (Job level in salary definition)
+          base_salary: item.base_salary, // Base salary (from salary definition)
+          commission_percentage: item.commission_percentage, // Commission percentage
+          title: jobDetails.title, // Job title (from job details)
+        };
+
+        // Group by department
+        if (!departmentMap[department.id]) {
+          departmentMap[department.id] = {
+            department_name: department.name, // Department name as string
+            department_id: department.id, // Department name as id
+            jobs_salary_definition: [] // Initialize an empty array for jobs under this department
+          };
+        }
+
+        // Add the salary definition under the appropriate department's jobs array
+        departmentMap[department.id].jobs_salary_definition.push(salaryWithJobAndDepartment);
+
+        return departmentMap;
+      }));
+
+      // Return the grouped salary definitions by department
+      const groupedByDepartment = Object.values(departmentMap);
+
+      return createResponse('OK', groupedByDepartment);
+
     } catch (error) {
       console.error('Error fetching salary definitions:', error);
       throw new HttpException(
@@ -72,6 +113,9 @@ export class SalaryDefinitionsService {
       );
     }
   }
+
+
+
 
   // Get a specific salary definition by ID
   async findOne(id: string) {
