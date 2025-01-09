@@ -17,6 +17,10 @@ export class PayrollAdjustmentReportsController {
     return this.payrollAdjustmentReportsService.findAll();
   }
 
+  @Get('staffId/:staffId')
+  findAllByStaffId(@Param('staffId') staffId: string) {
+    return this.payrollAdjustmentReportsService.findAllByStaffId(staffId);
+  }
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.payrollAdjustmentReportsService.findOne(id);

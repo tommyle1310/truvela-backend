@@ -12,6 +12,7 @@ export class CreatePayrollAdjustmentReportDto {
     notes: string; // Notes related to the payroll adjustment report
 
     @IsOptional()
-    @IsArray()
-    payroll_adjustments: string[]; // Array of payroll adjustment IDs (e.g., [PRA_1, PRA_2])
+    @IsString()
+    payroll_adjustment: string; // Array of payroll adjustment IDs (e.g., PRA_1)
+
 }

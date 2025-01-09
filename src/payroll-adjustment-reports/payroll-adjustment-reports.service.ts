@@ -79,6 +79,77 @@ export class PayrollAdjustmentReportsService {
     }
   }
 
+  async findAllByStaffId(staffId: string) {
+    try {
+      // Fetch payroll adjustment reports filtered by the given staffId
+      const payrollAdjustmentReports = await this.firebaseService.queryCollection('payrollAdjustmentReports', 'staff_id', staffId);
+      console.log('Fetched payroll adjustment reports by staffId:', payrollAdjustmentReports);
+
+      // Fetch the corresponding payroll adjustment details for each report
+      const payrollAdjustmentReportsWithDetails = await Promise.all(payrollAdjustmentReports.map(async (report) => {
+        // Fetch payroll adjustment details using the payroll_adjustment ID
+        const payrollAdjustmentDetails = await this.firebaseService.getDocument('payrollAdjustments', report.payroll_adjustment);
+
+        // Fetch staff details using staff_id from the payroll report
+        const staffDetails = await this.firebaseService.getDocument('staffs', report.staff_id);
+
+        // Ensure 'payroll_adjustment' ID is retained in the structure
+        return {
+          ...report,  // Spread the existing report data
+          payroll_adjustment_details: payrollAdjustmentDetails,  // Add the payroll adjustment details
+          staff_name: `${staffDetails.first_name} ${staffDetails.last_name}`, // Construct staff name
+          staff_id: staffDetails.id, // Add staff_id
+          staff_email: staffDetails.email, // Include staff email (if needed)
+          notes: report.notes, // Ensure 'notes' is included from the payroll report
+          payroll_adjustment: report.payroll_adjustment // Explicitly keep the 'payroll_adjustment' ID
+        };
+      }));
+
+      // Group by the type of payroll adjustment (e.g., 'Reimbursement', 'Bonus')
+      const groupedByType = payrollAdjustmentReportsWithDetails.reduce((acc, report) => {
+        const type = report.payroll_adjustment_details.type;
+
+        // If the type group does not exist, create it
+        if (!acc[type]) {
+          acc[type] = {
+            type,  // Store the type
+            adjustments: [], // Hold the adjustments for that type
+          };
+        }
+
+        // Add the report to the corresponding type group
+        acc[type].adjustments.push({
+          name: report.payroll_adjustment_details.name,
+          amount: report.payroll_adjustment_details.amount,
+          staff_name: report.staff_name,
+          payroll_adjustment_id: report.payroll_adjustment,  // Now it has payroll_adjustment ID
+          staff_id: report.staff_id,
+          description: report.payroll_adjustment_details.description,
+          createdAt: report.payroll_adjustment_details.created_at,
+          updatedAt: report.payroll_adjustment_details.updated_at,
+          notes: report.notes, // Add 'notes' here
+        });
+
+        return acc;
+      }, {});
+
+      // Convert the grouped result back into an array
+      const groupedData = Object.values(groupedByType);
+
+      return createResponse('OK', groupedData);
+    } catch (error) {
+      console.error('Error fetching payroll adjustment reports by staffId:', error);
+      throw new HttpException(
+        createResponse('ServerError', 'Failed to fetch payroll adjustment reports by staffId'),
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+
+
+
+
   // Find one payroll adjustment report by ID
   async findOne(id: string) {
     const payrollAdjustmentReport = await this.firebaseService.getDocument('payrollAdjustmentReports', id); // Fetch payroll adjustment report by ID
