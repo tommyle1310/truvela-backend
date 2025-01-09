@@ -57,8 +57,60 @@ export class PayrollsService {
   // Get all payroll records
   async findAll() {
     try {
-      const payrolls = await this.firebaseService.getCollection('payrolls'); // Fetch all payroll records
-      return createResponse('OK', payrolls);
+      // Fetch all payroll records
+      const payrolls = await this.firebaseService.getCollection('payrolls');
+      console.log('Fetched payroll records:', payrolls);
+
+      // For each payroll, fetch the corresponding staff details, department, and job information, then merge them
+      const payrollWithStaffAndDepartmentDetails = await Promise.all(payrolls.map(async (payroll) => {
+        // Fetch staff details using the staff_id in the payroll record
+        const staffDetails = await this.firebaseService.getDocument('staffs', payroll.staff_id);
+
+        // Fetch department details using the department field in staff details
+        const departmentDetails = await this.firebaseService.getDocument('departments', staffDetails.department);
+
+        // Fetch job details using the job field in staff details
+        const jobDetails = await this.firebaseService.getDocument('jobs', staffDetails.job);
+
+        // Return the payroll record with staff, department, and job details merged
+        return {
+          ...payroll, // Spread the existing payroll data
+          staff: {
+            ...staffDetails, // Add all existing staff details
+            department: departmentDetails, // Add department details inside the staff object
+            job: {  // Add job details inside the staff object
+              id: staffDetails.job,
+              title: jobDetails.title,
+            },
+          },
+        };
+      }));
+
+      // Group the payrolls by department_id
+      const groupedByDepartment = payrollWithStaffAndDepartmentDetails.reduce((acc, payroll) => {
+        const departmentId = payroll.staff.department.id;
+        const departmentName = payroll.staff.department.name;
+
+        // Find the existing department group or create a new one
+        let departmentGroup = acc.find(group => group.department_id === departmentId);
+
+        if (!departmentGroup) {
+          departmentGroup = {
+            department_name: departmentName,
+            department_id: departmentId,
+            staffs_payroll: [],
+          };
+          acc.push(departmentGroup);
+        }
+
+        // Add the payroll to the appropriate department group
+        departmentGroup.staffs_payroll.push(payroll);
+        return acc;
+      }, []);
+
+      // Return the grouped payrolls by department
+      return createResponse('OK', groupedByDepartment);
+
     } catch (error) {
       console.error('Error fetching payroll records:', error);
       throw new HttpException(
@@ -67,6 +119,9 @@ export class PayrollsService {
       );
     }
   }
+
+
+
 
   // Get a specific payroll record by ID
   async findOne(id: string) {
