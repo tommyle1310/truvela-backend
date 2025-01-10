@@ -192,8 +192,6 @@ export class FirebaseService {
         if (!doc.exists) {
             return null;
         }
-
-        // Return only the document data
         return doc.data();
     }
 
