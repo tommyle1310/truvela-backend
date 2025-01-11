@@ -1,5 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { PayrollAdjustmentReportsService } from './payroll-adjustment-reports.service';
+
+
 import { CreatePayrollAdjustmentReportDto } from './dto/create-payroll-adjustment-report.dto';
 import { UpdatePayrollAdjustmentReportDto } from './dto/update-payroll-adjustment-report.dto';
 
@@ -18,8 +20,8 @@ export class PayrollAdjustmentReportsController {
   }
 
   @Get('staffId/:staffId')
-  findAllByStaffId(@Param('staffId') staffId: string) {
-    return this.payrollAdjustmentReportsService.findAllByStaffId(staffId);
+  async findAllByStaffId(@Param('staffId') staffId: string) {
+    return await this.payrollAdjustmentReportsService.findAllByStaffId(staffId);
   }
   @Get(':id')
   findOne(@Param('id') id: string) {

@@ -15,4 +15,8 @@ export class CreatePayrollAdjustmentReportDto {
     @IsString()
     payroll_adjustment: string; // Array of payroll adjustment IDs (e.g., PRA_1)
 
+    @IsOptional()
+    @IsString()
+    overtime_report: string; // Array of payroll adjustment IDs (e.g., OR_1)
+
 }

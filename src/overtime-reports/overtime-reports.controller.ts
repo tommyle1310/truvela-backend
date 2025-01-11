@@ -17,6 +17,11 @@ export class OvertimeReportsController {
     return this.overtimeReportsService.findAll();
   }
 
+  @Get('staffId/:staffId')
+  findAllByStaffId(@Param('staffId') staffId: string) {
+    return this.overtimeReportsService.findAllByStaffId(staffId);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.overtimeReportsService.findOne(id);

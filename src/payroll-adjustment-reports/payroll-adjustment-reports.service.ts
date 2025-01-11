@@ -78,59 +78,71 @@ export class PayrollAdjustmentReportsService {
       );
     }
   }
-
   async findAllByStaffId(staffId: string) {
     try {
       // Fetch payroll adjustment reports for the given staffId
       const payrollAdjustmentReports = await this.firebaseService.queryCollection('payrollAdjustmentReports', 'staff_id', staffId);
 
-      console.log('Fetched payroll adjustment reports:', payrollAdjustmentReports);
-
-      // Prepare the response data structure
-      const responseData = [];
+      // Prepare an empty object to dynamically hold the data for different types
+      const groupedData = {};
 
       // Fetch staff details using the provided staffId
       const staff = await this.firebaseService.getDocument('staffs', `${staffId}`);
-      const staffName = staff ? staff.name : null;
       const staffEmail = staff ? staff.email : null;
-
-      // Temporary object to group by 'type'
-      const groupedByType: { [key: string]: any } = {};
 
       // Loop through each payroll adjustment report for the staff
       for (const report of payrollAdjustmentReports) {
-        // Query payroll adjustments to get the 'type' based on payroll_adjustment
+        // Fetch the payroll adjustment document
         const payrollAdjustment = await this.firebaseService.getDocument('payrollAdjustments', report.payroll_adjustment);
         const payrollAdjustmentType = payrollAdjustment ? payrollAdjustment.type : null;
 
-        // If the group for this type doesn't exist, create it
-        if (!groupedByType[payrollAdjustmentType]) {
-          groupedByType[payrollAdjustmentType] = {
+        // Dynamically initialize the type in groupedData if it doesn't exist yet
+        if (!groupedData[payrollAdjustmentType]) {
+          groupedData[payrollAdjustmentType] = {
             type: payrollAdjustmentType,
-            staff_id: report.staff_id,
-            staff_name: staffName,
+            staff_id: staffId,
             staff_email: staffEmail,
             payroll_adjustment_reports: [],
           };
         }
-        console.log('check asdoisaodijasiodnasionfaspkfa', payrollAdjustment)
-        // Add the payroll adjustment report to the group
-        groupedByType[payrollAdjustmentType].payroll_adjustment_reports.push({
-          name: payrollAdjustment.name,   // Assuming name comes from payrollAdjustment document
+
+        // Add payroll adjustment report to the corresponding type
+        groupedData[payrollAdjustmentType].payroll_adjustment_reports.push({
+          name: payrollAdjustment.name,
           type: payrollAdjustment.type,
           id: report.payroll_adjustment,
           amount: payrollAdjustment.amount,
-          date: payrollAdjustment.date,
           updated_at: payrollAdjustment.updated_at,
         });
-      }
 
-      // Push the grouped data into responseData
-      for (const key in groupedByType) {
-        if (groupedByType.hasOwnProperty(key)) {
-          responseData.push(groupedByType[key]);
+        // Handle overtime reports if they exist
+        if (report.overtime_report) {
+          const overtimeReport = await this.firebaseService.getDocument('overtimeReports', report.overtime_report);
+
+          if (overtimeReport && overtimeReport.staff_id === staffId) {
+            // Ensure 'Overtime' type exists and add overtime report details
+            if (!groupedData['Overtime']) {
+              groupedData['Overtime'] = {
+                type: 'Overtime',
+                staff_id: staffId,
+                staff_email: staffEmail,
+                overtime_reports: [],
+              };
+            }
+            // Push overtime report details related to the provided staffId
+            groupedData['Overtime'].overtime_reports.push({
+              staff_id: overtimeReport.staff_id,
+              date: overtimeReport.date,
+              overtime_hour: overtimeReport.overtime_hour,
+              created_at: overtimeReport.created_at,
+              updated_at: overtimeReport.updated_at,
+            });
+          }
         }
       }
+
+      // Convert the groupedData object to an array
+      const responseData = Object.values(groupedData);
 
       // Return the formatted response
       return createResponse('OK', responseData);
@@ -143,10 +155,6 @@ export class PayrollAdjustmentReportsService {
       );
     }
   }
-
-
-
-
 
 
   // Find one payroll adjustment report by ID

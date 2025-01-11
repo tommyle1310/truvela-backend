@@ -109,6 +109,29 @@ export class OvertimeReportsService {
     }
   }
 
+  async findAllByStaffId(staffId: string) {
+    try {
+      // Fetch all overtime reports from the database
+      const overtimeReports = await this.firebaseService.getCollection('overtimeReports');
+
+
+      // Filter reports by the provided staffId
+      const filteredReports = overtimeReports.filter(report => report.staff_id === staffId);
+      console.log('check', filteredReports)
+
+      // Return the filtered reports wrapped in a response object
+      return createResponse('OK', filteredReports);
+    } catch (error) {
+      // If an error occurs, log it and throw an appropriate exception
+      console.error('Error fetching overtime reports by staff ID:', error);
+      throw new HttpException(
+        createResponse('ServerError', 'Failed to fetch overtime reports for the specified staff ID'),
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+
   // Find one overtime report by ID
   async findOne(id: string) {
     const overtimeReport = await this.firebaseService.getDocument('overtimeReports', id); // Fetch overtime report by ID
