@@ -52,9 +52,195 @@ export class MonthlyStaffAvailabilityService {
   async findAll() {
     // Fetch all monthly staff availability records from the 'monthlyStaffAvailability' collection
     const availabilityRecords = await this.firebaseService.getCollection('monthlyStaffAvailability');
-    console.log('Fetched monthly staff availability records:', availabilityRecords);
+    console.log('Fetched all monthly staff availability records:', availabilityRecords);
     return createResponse('OK', availabilityRecords);
   }
+
+  async findAllGroupByStaff(month: string) {
+    // Fetch all monthly staff availability records from the 'monthlyStaffAvailability' collection
+    const availabilityRecords = await this.firebaseService.queryCollection('monthlyStaffAvailability', 'month', month);
+
+    // Check if availabilityRecords is empty
+    console.log('Fetched availability records:', availabilityRecords);
+    if (!availabilityRecords || availabilityRecords.length === 0) {
+      console.log('No records found for this month.');
+      return createResponse('OK', []);
+    }
+
+    // Group availability records by staff_id
+    const groupedByStaff = availabilityRecords.reduce((acc, record) => {
+      const { staff_id, days, note, created_at, updated_at, month, ...rest } = record;
+
+      // If the staff_id is not in the accumulator, add it
+      if (!acc[staff_id]) {
+        acc[staff_id] = {
+          staff_id,
+          note,
+          created_at,
+          updated_at,
+          month,
+          days: [],
+          ...rest, // You can spread other fields if there are more fields you want to keep
+        };
+      }
+
+      // Merge the days of the current record with the existing days for this staff_id
+      acc[staff_id].days = [...acc[staff_id].days, ...days];
+
+      return acc;
+    }, {});
+
+    // For each staff member, fetch the daily availability records for the days array
+    const updatedAvailabilityRecords = await Promise.all(
+      Object.values(groupedByStaff).map(async (staffRecord) => {
+        console.log('Processing staff record:', staffRecord.staff_id); // Log the staff record being processed
+
+        // Fetch daily availability records for the 'days' array in the current staff record
+        const dayAvailabilityPromises = staffRecord.days.map(async (dayId) => {
+          console.log('check', dayId); // Log each dayId
+          try {
+            // Fetch the daily availability document for each dayId
+            const dayAvailability = await this.firebaseService.getDocument('dailyStaffAvailability', dayId);
+            // Return the day availability with its id and staff_id
+            return { ...dayAvailability, id: dayId, staff_id: staffRecord.staff_id };
+          } catch (error) {
+            console.error('Error fetching day availability for dayId:', dayId, error);
+            return { id: dayId, error: 'Error fetching document' }; // Return an error object with id
+          }
+        });
+
+        // Wait for all the daily availability documents to be fetched
+        const days = await Promise.all(dayAvailabilityPromises);
+
+        // Remove duplicates based on the `staff_id` for each day
+        const uniqueDays = days.filter((value, index, self) =>
+          index === self.findIndex((t) => (
+            t.staff_id === value.staff_id && t.date === value.date
+          ))
+        );
+
+        // Return the updated staff record with the additional 'days' information
+        return {
+          ...staffRecord, // Keep the existing properties (including note, created_at, etc.)
+          days: uniqueDays, // Add the unique day availability data
+        };
+      })
+    );
+
+    // Return the response with the updated availability records
+    return createResponse('OK', updatedAvailabilityRecords);
+  }
+
+  async findAllGroupByDate(month: string) {
+    console.log('Function called'); // Check if function is called
+
+    // Fetch all monthly staff availability records from the 'monthlyStaffAvailability' collection
+    const availabilityRecords = await this.firebaseService.queryCollection('monthlyStaffAvailability', 'month', month);
+
+    console.log('Fetched availability records:', availabilityRecords); // Check what data is being fetched
+
+    if (!availabilityRecords || availabilityRecords.length === 0) {
+      console.log('No records found for this month.');
+      return createResponse('NotFound', []);
+    }
+
+    // Create an object to group by date
+    const groupedByDate = {};
+
+    // Create an array of promises for each day fetching
+    const dayAvailabilityPromises = [];
+
+    // Iterate over the availability records
+    for (const record of availabilityRecords) {
+      // For each record, process the days
+      for (const dayId of record.days) {
+        // Add the promise to the array
+        const dayAvailability = this.firebaseService.getDocument('dailyStaffAvailability', dayId).then(async (dayData) => {
+          console.log('Day data fetched:', dayData); // Check if day data is fetched
+
+          const { date, staff_id, status, blocked_time, attended_hours, shift, created_at, updated_at } = dayData;
+
+          try {
+            // Fetch staff details using staff_id
+            const staffData = await this.firebaseService.getDocument('staffs', staff_id);
+            console.log('Staff data fetched:', staffData); // Check staff data
+
+            const { first_name, last_name, email, avatar, department } = staffData;
+
+            // Fetch department details using department ID
+            const departmentDetails = await this.firebaseService.getDocument('departments', department);
+            console.log('Department data fetched:', departmentDetails); // Check department data
+
+            // Fetch shift name using shift ID from 'staffShifts'
+            const shiftData = await this.firebaseService.getDocument('staffShifts', shift);
+            console.log('Shift data fetched:', shiftData); // Check shift data
+
+            const shift_name = shiftData ? shiftData.shift_type : '';  // Handle if shift data is missing
+            console.log('Shift name:', shift_name); // Check the shift name
+
+            // If the date is not already in the groupedByDate object, initialize it
+            if (!groupedByDate[date]) {
+              groupedByDate[date] = {
+                date,
+                staffs: [],
+                note: record.note,
+                created_at: record.created_at,
+                updated_at: record.updated_at,
+                month: record.month,
+              };
+            }
+
+            // Push the staff availability data along with staff, department, and shift details to the date group
+            groupedByDate[date].staffs.push({
+              staff_id,
+              first_name,
+              last_name,
+              email,
+              avatar,
+              department: departmentDetails,
+              status,
+              blocked_time,
+              attended_hours,
+              shift,
+              shift_name, // Add the shift name here
+              created_at,
+              updated_at,
+              id: dayId // Include the day ID
+            });
+          } catch (error) {
+            console.error('Error fetching staff, department, or shift details:', error);
+          }
+        }).catch((error) => {
+          console.error('Error fetching daily availability:', error);
+        });
+
+        // Push the promise to the array to track completion
+        dayAvailabilityPromises.push(dayAvailability);
+      }
+    }
+
+    // Wait for all promises to resolve (both staff details, department details, day availability, and shift details)
+    await Promise.all(dayAvailabilityPromises)
+      .then(() => {
+        console.log('All promises resolved');
+      })
+      .catch((error) => {
+        console.error('Error in Promise.all:', error);
+      });
+
+    // Now that all async operations are complete, log the final grouped result
+    console.log('Grouped by date with staff, department, and shift details:', groupedByDate);
+
+    // Convert groupedByDate to an array of the grouped data by date
+    const groupedData = Object.values(groupedByDate);
+
+    return createResponse('OK', groupedData);
+  }
+
+
+
+
+
 
   async findOne(id: string) {
     const availabilityDoc = await this.firebaseService.getDocument('monthlyStaffAvailability', id);

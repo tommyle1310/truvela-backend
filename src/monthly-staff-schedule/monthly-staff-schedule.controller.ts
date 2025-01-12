@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { MonthlyStaffAvailabilityService } from './monthly-staff-schedule.service';
 import { CreateMonthlyStaffAvailabilityDto } from './dto/create-monthly-staff-schedule.dto';
 import { UpdateMonthlyStaffAvailabilityDto } from './dto/update-monthly-staff-schedule.dto';
@@ -12,9 +12,26 @@ export class MonthlyStaffScheduleController {
     return this.MonthlyStaffAvailabilityService.create(CreateMonthlyStaffAvailabilityDto);
   }
 
-  @Get()
+  @Get() // Default route
   findAll() {
     return this.MonthlyStaffAvailabilityService.findAll();
+  }
+
+  // Custom route for handling month query
+  @Get('group-by-staff') // This handles the '/monthly-staff-schedule/abc/month' route
+  async findAllGroupByStaff(@Query('month') month: string) {
+    if (!month) {
+      return { message: 'Month query parameter is required' };
+    }
+    return this.MonthlyStaffAvailabilityService.findAllGroupByStaff(month);
+  }
+
+  @Get('group-by-date') // This handles the '/monthly-staff-schedule/abc/month' route
+  async findAllGroupByDate(@Query('month') month: string) {
+    if (!month) {
+      return { message: 'Month query parameter is required' };
+    }
+    return this.MonthlyStaffAvailabilityService.findAllGroupByDate(month);
   }
 
   @Get(':id')
